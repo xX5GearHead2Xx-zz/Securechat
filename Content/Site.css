@@ -1,0 +1,7 @@
+﻿.jumbotron{
+    background-image:url(../Content/Images/technology_cell_mobile_phone.jpg);
+    background-size:cover;
+    background-repeat:no-repeat;
+    height:400px;
+    border-radius:0px;
+}
