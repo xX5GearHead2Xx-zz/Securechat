@@ -13,11 +13,6 @@ namespace SecureChat.Controllers
             return View();
         }
 
-        public ActionResult About()
-        {
-            return View();
-        }
-
         public ActionResult Chat()
         {
             return View();

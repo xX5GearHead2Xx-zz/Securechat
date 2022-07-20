@@ -16,7 +16,7 @@ namespace SecureChat
         {
             string ClientConnectionID = Context.ConnectionId;
 
-            string GroupToken = ArgonHash(ClientConnectionID);
+            string GroupToken = ClientConnectionID;
 
             Groups.Add(ClientConnectionID, GroupToken);
 
@@ -25,28 +25,21 @@ namespace SecureChat
 
         public Task JoinExistingGroup(string GroupToken, string Username)
         {
-            Groups.Add(Context.ConnectionId, GroupToken);
+            //If the entered group token is not a valid guid
+            //Generate a new GUID and then connect the user
+            if (!Guid.TryParse(GroupToken, out Guid Token))
+            {
+                GroupToken = Guid.NewGuid().ToString();
+            }
 
-            Clients.Group(GroupToken).userJoinedNotification(Username);
-
-            return Clients.Caller.connectedToGroup(GroupToken);
+            Groups.Add(Context.ConnectionId, GroupToken.ToString());
+            Clients.Group(GroupToken.ToString()).userJoinedNotification(Username);
+            return Clients.Caller.connectedToGroup(GroupToken.ToString());
         }
 
         public Task BroadCastToGroup(string Message, string SenderName, string GroupToken)
         {
             return Clients.Group(GroupToken).receiveGroupMessage(Message, SenderName);
-        }
-
-        private string ArgonHash(string Input)
-        {
-            var argon2 = new Argon2id(Encoding.UTF8.GetBytes(Input));
-            argon2.DegreeOfParallelism = 4;
-            argon2.Iterations = 1;
-            argon2.MemorySize = 1024 * 1024;
-
-            byte[] ArgonBytes = argon2.GetBytes(16);
-            string Final = Convert.ToBase64String(ArgonBytes);
-            return Final;
         }
     }
 }
