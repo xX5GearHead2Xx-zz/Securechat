@@ -1,0 +1,185 @@
+﻿@{
+    ViewBag.Title = "Contact";
+}
+<section>
+    <div class="container">
+        <div class="row">
+            <div class="offset-md-3 col-xl-6 col-lg-6 col-md-6 col-sm-12 col-xs-12 p-3">
+                <div id="UpdateDiv">
+
+                </div>
+            </div>
+        </div>
+        <div class="row" id="UsernameDiv">
+            <div class="offset-md-3 col-xl-6 col-lg-6 col-md-6 col-sm-12 col-xs-12 p-3">
+                <div class="form-group">
+                    <label>Enter a name to use in chat:</label>
+                    <input type="text" id="Username" class="form-control" autocomplete="off"/>
+                    <p id="UsernameError" style="color:red;"></p>
+                    <button type="button" class="btn btn-primary mt-1" style="width:100%;" id="UsernameBtn">Done</button>
+                </div>
+            </div>
+        </div>
+        <div class="row" id="ChatSelectionDiv" style="text-align:center;display:none;">
+            <div class="offset-md-3 col-xl-6 col-lg-6 col-md-6 col-sm-12 col-xs-12 p-3">
+                <div class="form-group">
+                    <div style="text-align:center;display:none;" id="ChatLoader">
+                        <span class="spinner-grow" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </span>
+                    </div>
+                    <p><button class="btn btn-primary" style="width:100%;" id="CreateChatBtn">Create a new chat</button></p>
+                    <p>OR</p>
+                    <div class="form-group">
+                        <label>Enter an existing chat ID to join the chat</label>
+                        <input type="text" id="JoinChatID" placeholder="Chat ID" class="form-control" autocomplete="off"/>
+                    </div>
+                    <p><button class="btn btn-primary mt-2" style="width:100%;" id="JoinChatBtn">Join existing chat</button></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row" id="ChatWindow" style="display:none;">
+            <div class="offset-md-3 col-xl-6 col-lg-6 col-md-6 col-sm-12 col-xs-12 p-3">
+                <div class="card">
+                    <div class="card-header" id="CurrentGroupIDDiv" style="display:none;">
+                        <div class="row">
+                            <div class="col-md-6 col-sm-6 col-xs-6">
+                                <span id="NameDiv"></span>
+                            </div>
+                            <div class="col-md-6 col-sm-6 col-xs-6">
+                                <button class="btn btn-primary btn-sm w-100" onclick="CopyID()">Copy Chat ID</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="MessageWindow" style="height:400px;overflow:scroll;">
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="row">
+                            <div class="col-xl-10 col-lg-10 col-md-10 col-sm-12 col-xs-12">
+                                <textarea class="form-control" id="Message" style="resize:none;" autocomplete="off"></textarea>
+                            </div>
+                            <div class="col-xl-2 col-lg-2 col-md-2 col-sm-12 col-xs-12">
+                                <button class="btn btn-primary" style="width:100%;height:100%" id="SendBtn">Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script src="~/Scripts/jquery-3.6.0.min.js"></script>
+<script src="~/Scripts/jquery.signalR-2.4.3.min.js"></script>
+<script src="~/signalr/hubs"></script>
+<script src="~/Scripts/crypto-js-3.1.9.min.js"></script>
+<script>
+    var chat = $.connection.message;
+    var CurrentGroupID = "";
+    var Username = "";
+
+    $("#UsernameBtn").click(function () {
+        Username = $("#Username").val();
+        if (Username == "" || Username == null) {
+            document.getElementById("UsernameError").innerHTML = "You must enter a chat name";
+        } else {
+            document.getElementById("UsernameDiv").style.display = "none";
+            document.getElementById("ChatSelectionDiv").style.display = "block";
+            document.getElementById("NameDiv").innerHTML = Username;
+        }
+    })
+    //send functions
+    $.connection.hub.start().done(function () {
+        $("#JoinChatBtn").click(function () {
+            document.getElementById("ChatLoader").style.display = "block";
+            var GroupID = $("#JoinChatID").val();
+            chat.server.joinExistingGroup(GroupID, Username);
+        })
+
+        $("#CreateChatBtn").click(function () {
+            document.getElementById("ChatLoader").style.display = "block";
+            chat.server.createChatGroup();
+        })
+
+        $("#SendBtn").click(function () {
+            var Username = $("#Username").val();
+            var Message = Encrypt($("#Message").val());
+            chat.server.broadCastToGroup(Message, Username, CurrentGroupID);
+            $("#Message").val('');
+        })
+
+
+    });
+    //
+
+    //receive functions
+    chat.client.connectedToGroup = function (GroupID) {
+        $("#UpdateDiv").append(
+            "<div class='alert alert-success' onclick='RemoveElement(this)'>You joined the group (click here to close this message)</div>"
+        )
+        CurrentGroupID = GroupID;
+        document.getElementById("ChatSelectionDiv").style.display = "none";
+        document.getElementById("CurrentGroupIDDiv").style.display = "block";
+        document.getElementById("ChatLoader").style.display = "none";
+        document.getElementById("ChatWindow").style.display = "block";
+    }
+
+    chat.client.userJoinedNotification = function (UserName) {
+        $("#MessageWindow").append(
+            "<div class='card GroupNotification m-2'>" +
+            "<div class='card-body p-1'>" +
+            "" + UserName + " Joined the chat" +
+            "</div>" +
+            "</div>"
+        )
+    }
+
+    chat.client.groupCreated = function (GroupToken) {
+        console.log(GroupToken);
+        $("#UpdateDiv").append(
+            "<div class='alert alert-success' onclick='RemoveElement(this)'>Group Created Successfully, share the group ID with others so that they can join your group. (click here to close this message)</div>"
+        )
+        CurrentGroupID = GroupToken;
+        document.getElementById("ChatSelectionDiv").style.display = "none";
+        document.getElementById("CurrentGroupIDDiv").style.display = "block";
+        document.getElementById("ChatLoader").style.display = "none";
+        document.getElementById("ChatWindow").style.display = "block";
+    }
+
+    chat.client.receiveGroupMessage = function (Message, Username) {
+        $("#MessageWindow").append(
+            "<div class='card m-2'>" +
+            "<div class='card-header p-1'>" +
+            "" + Username + "" +
+            "</div>" +
+            "<div class='card-body p-1'>" +
+            "" + Decrypt(Message) + "" +
+            "</div>" +
+            "</div>"
+        )
+    }
+
+    function RemoveElement(element) {
+        element.style.display = "none";
+    }
+
+    function CopyID() {
+        alert("Chat ID: " + CurrentGroupID + " do not share this ID with anyone you dont trust.");
+    }
+
+    function Encrypt(Input) {
+        console.log("hit encrypt");
+        var Encrypted = CryptoJS.AES.encrypt(Input, CurrentGroupID).toString();
+        console.log(Encrypted)
+        return Encrypted;
+    }
+
+    function Decrypt(Input) {
+        console.log("hit decrypt");
+        var Decrypted = CryptoJS.AES.decrypt(Input, CurrentGroupID).toString(CryptoJS.enc.Utf8);
+        console.log(Decrypted);
+        return Decrypted;
+    }
+</script>

@@ -1,0 +1,29 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+<div class="jumbotron shadow-sm mb-3">
+    <h1 style="text-align:center;">Secure Chat</h1>
+    <p style="text-align:center;" class="lead">Ready to chat without worrying about who can see your messages?</p>
+    <p style="text-align:center;">
+        @Html.ActionLink("Get Started", "Chat", "Home", null, new { @class = "btn btn-primary btn-lg mt-3" })
+        @Html.ActionLink("How do i know this is really safe?", "HowItWorks", "Home", null, new { @class = "btn btn-dark btn-lg mr-2 mt-3" })
+    </p>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <h2>Safe and Secure</h2>
+        <p>
+            SecureChat does not gather any information about its users.
+        </p>
+    </div>
+    <div class="col-md-4">
+        <h2>No logging or history</h2>
+        <p>We do not log any of the information that our users input on our site, once you close the browser, all of the information is lost forever.</p>
+    </div>
+    <div class="col-md-4">
+        <h2>Easy to Use</h2>
+        <p>SecureChat is easy to use and free. No sign up required, just create a chat room and start chatting</p>
+    </div>
+</div>

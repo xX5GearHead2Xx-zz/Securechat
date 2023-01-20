@@ -13,7 +13,7 @@
         <div class="row" id="UsernameDiv">
             <div class="offset-md-3 col-xl-6 col-lg-6 col-md-6 col-sm-12 col-xs-12 p-3">
                 <div class="form-group">
-                    <label>Enter a name to use in chat with unique ID:</label>
+                    <label>Enter a name to use in chat:</label>
                     <input type="text" id="Username" class="form-control" autocomplete="off"/>
                     <p id="UsernameError" style="color:red;"></p>
                     <button type="button" class="btn btn-primary mt-1" style="width:100%;" id="UsernameBtn">Done</button>
@@ -137,6 +137,7 @@
     }
 
     chat.client.groupCreated = function (GroupToken) {
+        console.log(GroupToken);
         $("#UpdateDiv").append(
             "<div class='alert alert-success' onclick='RemoveElement(this)'>Group Created Successfully, share the group ID with others so that they can join your group. (click here to close this message)</div>"
         )
@@ -165,21 +166,18 @@
     }
 
     function CopyID() {
-        navigator.clipboard.writeText(CurrentGroupID);
-        alert("Chat ID copied, do not share this ID with anyone you dont trust.");
+        alert("Chat ID: " + CurrentGroupID + " do not share this ID with anyone you dont trust.");
     }
 
     function Encrypt(Input) {
         console.log("hit encrypt");
         var Encrypted = CryptoJS.AES.encrypt(Input, CurrentGroupID).toString();
-        console.log(Encrypted)
         return Encrypted;
     }
 
     function Decrypt(Input) {
         console.log("hit decrypt");
         var Decrypted = CryptoJS.AES.decrypt(Input, CurrentGroupID).toString(CryptoJS.enc.Utf8);
-        console.log(Decrypted);
         return Decrypted;
     }
 </script>
